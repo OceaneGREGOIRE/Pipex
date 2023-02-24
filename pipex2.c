@@ -12,19 +12,7 @@
 
 int main (int argc, char **argv, int env**)
 {
-	pipe (fd[2]);
-	if (pipe(fd) == -1)
-	{
-		perror();
-		exit(EXIT_FAILURE);
-	}
-
-}
-
-int child_pipex(char *path, char **argv)
-{
 	pid_t	pid;
-	int		fd[2];
 
 	pid = fork();
 	if (pid == -1)
@@ -32,25 +20,58 @@ int child_pipex(char *path, char **argv)
 		perror();
 		exit(EXIT_FAILURE);
 	}
+	pipe (fd[2]);
+	if (pipe(fd) == -1)
+	{
+		perror();
+		exit(EXIT_FAILURE);
+	}
+	
+	return();
+}
+
+int child_pipex(pid_t pid, int *fd, char *path, char **argv)
+{
+	int		infile;
+
+
 	if (pid == 0) /* processus fils */
 	{
-		close(fd[1]); /*ferme l'entree lire*/
+		infile = open(argv[2], O_RDONLY);
+		close(fd[0]); /*ferme l'entree lire*/
+		dup2(infile, STDIN_FILENO);
+		dup2(fd[1], STDOUT_FILENO);
+		close(infile);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
 		exceve(/*path*/, argv[2], env);
-		dup2(fd[1], 1);
-		close(fd[0]);
-		close(fd[1]);
-	}
-	else /* processus pere*/
-	{
-		wait();
-		close(fd[0]); /*ferme la sortie ecrire */
-	//	fork();
-		
-		exceve(/*path*/, argv[3], env);
 
 	}
 	return(0);
 }
-int 
+
+int	parent_pipex(pid_t pid, int *fd, char *path, char **argv)
+{
+	int		outfile;
+
+	if (pid > 0)
+	{
+		wait();
+		outfile = open(argv[3], O_WRONLY, /*O_CREAT*/)
+		close(fd[1]); /*ferme la sortie ecrire */
+		dup2(fd[0], STDIN_FILENO);
+		dup2(outfile, STDOUT_FILENO);
+		close(fd[0]);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		exceve(/*path*/, argv[3], env);
+	}
+	return(0);
+}
+
+char	*get_path(int env**);
+{
+	
+}
 
 
