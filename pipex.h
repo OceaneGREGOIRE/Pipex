@@ -19,9 +19,13 @@
 # include <stdlib.h>
 # include <fcntl.h>
 
-char 	*ft_strnstr(char *hs, char *n, int len);
-char	**ft_split(char *s, char c);
+int     child_process(int *fd, char *path, char **argv, char **env);
+int	    parent_process(int *fd, char *path, char **argv, char **env);
 char	*get_path(char *cmd ,char **env);
+int     main (int argc, char **argv, int **env);
+char	*ft_strnstr(char *hs, char *n, int len);
+char	**ft_split(char *s, char c);
 char	*ft_strjoin(char *s1, char *s2);
+int	    ft_strlen(char *str);
 
 #endif

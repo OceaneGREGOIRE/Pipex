@@ -12,42 +12,36 @@
 
 #include "pipex.h"
 
-int child_pipex(pid_t pid, int *fd, char *path, char **argv, char **env)
+int child_process(int *fd, char *path, char **argv, char **env)
 {
 	int		infile;
 
 
-	if (pid == 0)
-	{
-		infile = open(argv[2], O_RDONLY);
-		close(fd[0]);
-		dup2(infile, STDIN_FILENO);
-		dup2(fd[1], STDOUT_FILENO);
-		close(infile);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		exceve("PATH", argv[2], env);
-
-	}
+	infile = open(argv[2], O_RDONLY);
+	close(fd[0]);
+	dup2(infile, STDIN_FILENO);
+	dup2(fd[1], STDOUT_FILENO);
+	close(infile);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	exceve("PATH", argv[2], env);
 	return(0);
 }
 
-int	parent_pipex(pid_t pid, int *fd, char *path, char **argv, char **env)
+int	parent_process(int *fd, char *path, char **argv, char **env)
 {
 	int		outfile;
 
-	if (pid > 0)
-	{
-		wait("PID");
-		outfile = open(argv[3], O_WRONLY, O_CREAT);
-		close(fd[1]); /*ferme la sortie ecrire */
-		dup2(fd[0], STDIN_FILENO);
-		dup2(outfile, STDOUT_FILENO);
-		close(fd[0]);
-		close(STDIN_FILENO);
-		close(STDOUT_FILENO);
-		execve('PATH', argv[3], env);
-	}
+
+	wait("PID");
+	outfile = open(argv[3], O_WRONLY, O_CREAT);
+	close(fd[1]);
+	dup2(fd[0], STDIN_FILENO);
+	dup2(outfile, STDOUT_FILENO);
+	close(fd[0]);
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	execve(path, argv[3], env);
 	return(0);
 }
 
@@ -57,43 +51,67 @@ char	*get_path(char *cmd ,char **env)
     char    **gpath;
     char    *tpath;
 	int		i;
+	int		j;
 	
+	j = 0;
 	i = 0;
-	while (env[i] && (!ft_strnstr(env[i], "PATH", 4)))
+	if (!env)
+		/*fct test bin et commande*/;
+	else
 	{
-		printf("env[%d] : %s", i, env[i]);
-		i++;
+		while (env[i] && (!ft_strnstr(env[i], "PATH=", 5)))
+			i++;
+		if (!env[i]) 
+		{
+			/*si y a pas d'environnement faire un cas "construire" un environneemnt*/;
+		}
+		else
+			gpath = ft_split(env[i] + 5, ':');
 	}
-	gpath = ft_split(env[i] + 5, ':');
-	i = 0;
-	while  (path[i])
+	
+	while  (gpath[i])
 	{
-        tpath = ft_strjoin(path[i], "/");
-        path[i] = ft_strjoin (tpath, cmd);
-		return (cmd[i]);
+        tpath = ft_strjoin(gpath[i], "/");
+		free(gpath[i]);
+        gpath[i] = ft_strjoin (tpath, cmd);
+		free(tpath[i]);
+		if (access(gpath[i], F_OK))
+    	{
+			path = ft_strdupcpy(gpath[i]);
+			while (gpath[j])
+			{
+				free(gpath[j]);
+				j++;
+			}
+        	free(gpath);
+        	return(path);
+    	}
 	}
-	if (env[i] && !access(path, F_OK))
-    {
-        free(gpath);
-        return(*path);
-    }
-	return (cmd[i]);
+	perror("error");
+	exit(127);
 }
 
-int main (int argc, char **argv, int env**)
+int main (int argc, char **argv, int **env)
 {
 	pid_t	pid;
+	int		fd[2];
 
 	pid = fork();
+	pipe(fd[2]);
 	if (pid == -1)
 	{
-		perror();
+		perror("error");
 		exit(EXIT_FAILURE);
 	}
+	else if (pid == 0)
+	{
+		child_process(pid, fd, get_path(argv[2], env), argv[2], env);
+	}
+	else
 	pipe (fd[2]);
 	if (pipe(fd) == -1)
 	{
-		perror();
+		perror("error");
 		exit(EXIT_FAILURE);
 	}
 	
