@@ -10,12 +10,11 @@
 #                                                                              #
 # **************************************************************************** #
 
-SRCS	=	pipex3.c \
-			pipex_utils.c \
+SRCS	=	pipex.c 
 
 OBJS	=	$(SRCS:.c=.o)
 
-NAME	=	pipex.a
+NAME	=	pipex
 
 RM		=	rm -f
 
@@ -23,18 +22,26 @@ CC		=	gcc
 
 CFLAGS	=	-Wall -Wextra -Werror
 
+LIBFT	=	libft/libft.a
+
 #-----------------------------------------------#
 
 all	:	$(NAME)
 
-$(NAME)	: $(objs)
-	ar -rcs $@ $^
+$(NAME)	: $(LIBFT) $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LIBFT) -o $(NAME)
+
 clean	:
 	$(RM) $(OBJS)
+	make clean -C libft
 
 fclean : clean
 	$(RM) $(NAME)
+	$(RM) $(LIBFT)
+
+$(LIBFT) :
+	make -C libft
 
 re	: fclean all
 
-.PHONY : all $(NAME) clean fclean re
+#.PHONY : all $(NAME) clean fclean re
